@@ -4,9 +4,5 @@ module register32zero(
 	input wrenable,
 	output reg [31:0] q
 );
-	always @(posedge clk) begin
-		if (wrenable) begin
-			q <= {d[31:1], 1'b1};
-		end
-	end
+	assign q = 32'b0;
 endmodule

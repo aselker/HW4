@@ -1,6 +1,9 @@
 //------------------------------------------------------------------------------
 // Test harness validates hw4testbench by connecting it to various functional 
 // or broken register files, and verifying that it correctly identifies each
+//
+// This does not test all possible cases.  In particular, it doesn't test any registers except for 0, 2, and
+// 3.  This is because any sane architecture will be uniform from 1 to 31.
 //------------------------------------------------------------------------------
 
 `include "regfile.v"
@@ -112,7 +115,6 @@ output reg		Clk
 
   // Test Case 1: 
   //   Write '42' to register 2, verify with Read Ports 1 and 2
-  //   (Passes because example register file is hardwired to return 42)
   WriteRegister = 5'd2;
   WriteData = 32'd42;
   RegWrite = 1;
@@ -123,12 +125,12 @@ output reg		Clk
   // Verify expectations and report test result
   if((ReadData1 !== 42) || (ReadData2 !== 42)) begin
     dutpassed = 0;	// Set to 'false' on failure
-    $display("Test Case 1 Failed");
+    $display("Test Case 1 (write) failed");
+		$display("ReadData1 = %b; ReadData2 = %b", ReadData1, ReadData2);
   end
 
   // Test Case 2: 
   //   Write '15' to register 2, verify with Read Ports 1 and 2
-  //   (Fails with example register file, but should pass with yours)
   WriteRegister = 5'd2;
   WriteData = 32'd15;
   RegWrite = 1;
@@ -138,9 +140,54 @@ output reg		Clk
 
   if((ReadData1 !== 15) || (ReadData2 !== 15)) begin
     dutpassed = 0;
-    $display("Test Case 2 Failed");
+    $display("Test Case 2 (write) failed");
+		$display("ReadData1 = %b; ReadData2 = %b", ReadData1, ReadData2);
   end
 
+  // Test Case 3: 
+  //   Write '42' to register 2, but don't set write enable
+  WriteRegister = 5'd2;
+  WriteData = 32'd42;
+  RegWrite = 0;
+  ReadRegister1 = 5'd2;
+  ReadRegister2 = 5'd2;
+  #5 Clk=1; #5 Clk=0;
+
+  if((ReadData1 !== 15) || (ReadData2 !== 15)) begin
+    dutpassed = 0;
+    $display("Test Case 3 (write enable) failed");
+		$display("ReadData1 = %b; ReadData2 = %b", ReadData1, ReadData2);
+  end
+
+  // Test Case 4: 
+  //   Write '42' to register 3, check register 2 to see if it's changed
+  WriteRegister = 5'd3;
+  WriteData = 32'd42;
+  RegWrite = 1;
+  ReadRegister1 = 5'd2;
+  ReadRegister2 = 5'd3;
+  #5 Clk=1; #5 Clk=0;
+
+  if((ReadData1 !== 15) || (ReadData2 !== 42)) begin
+    dutpassed = 0;
+    $display("Test Case 4 (register select) failed");
+		$display("ReadData1 = %b; ReadData2 = %b", ReadData1, ReadData2);
+  end
+
+  // Test Case 4: 
+  //   Write '42' to register 0, see if it's still 0
+  WriteRegister = 5'd0;
+  WriteData = 32'd42;
+  RegWrite = 1;
+  ReadRegister1 = 5'd0;
+  ReadRegister2 = 5'd0;
+  #5 Clk=1; #5 Clk=0;
+
+  if((ReadData1 !== 0) || (ReadData2 !== 0)) begin
+    dutpassed = 0;
+    $display("Test Case 4 (constant register 0) failed");
+		$display("ReadData1 = %b; ReadData2 = %b", ReadData1, ReadData2);
+  end
 
   // All done!  Wait a moment and signal test completion.
   #5

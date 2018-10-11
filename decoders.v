@@ -12,3 +12,7 @@ input[4:0]	address
 
 endmodule
 
+// This works because Verilog implicitly extends buses.  enable is treated as whatever size it has to to fill
+// all of out, and because it's shifted left by whatever number the address represents in binary, it ends up
+// on the correct output.  If it's 1, then one output is on.  If it's 0, then they're all off.
+
